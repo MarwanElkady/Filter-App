@@ -12,6 +12,57 @@ mohamed waleed osama : 20230361 - did the black and white and detect image filte
 using namespace std;
 #include "Image_Class.h"
 
+void rotateImage(Image &img, int angle)
+{
+    int newWidth, newHeight;
+    if (angle == 90 || angle == 270)
+    {
+        // Swap width and height for 90° or 270° rotation
+        newWidth = img.height;
+        newHeight = img.width;
+    }
+    else
+    {
+        // Keep width and height the same for 180° rotation
+        newWidth = img.width;
+        newHeight = img.height;
+    }
+
+    // Create a new image with the rotated dimensions
+    Image rotatedImage(newWidth, newHeight); // Removed img.channels parameter
+
+    // Copy pixels from the original image to the rotated image according to the chosen angle
+    for (int y = 0; y < img.height; ++y)
+    {
+        for (int x = 0; x < img.width; ++x)
+        {
+            int newX, newY;
+            if (angle == 90)
+            {
+                newX = y;
+                newY = img.width - 1 - x;
+            }
+            else if (angle == 180)
+            {
+                newX = img.width - 1 - x;
+                newY = img.height - 1 - y;
+            }
+            else if (angle == 270)
+            {
+                newX = img.height - 1 - y;
+                newY = x;
+            }
+            for (int c = 0; c < img.channels; ++c)
+            {
+                rotatedImage(newX, newY, c) = img(x, y, c);
+            }
+        }
+    }
+
+    // Replace the original image with the rotated image
+    img = rotatedImage;
+}
+
 // Function to flip the image horizontally
 void flipHorizontal(Image &img)
 {
@@ -175,6 +226,16 @@ int main()
                 cout << "Image saved successfully." << endl;
             }
 
+            else if (choice == 8)
+            {
+                // Rotate image int angle;
+                int angle;
+                cout << "Enter the rotation angle (90, 180, or 270): ";
+                cin >> angle;
+
+                rotateImage(image, angle);
+                cout << "Image rotated." << endl;
+            }
             else if (choice == 7)
             {
                 // Exit the application

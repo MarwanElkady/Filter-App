@@ -12,86 +12,55 @@ mohamed waleed osama : 20230361 - did the black and white and detect image filte
 using namespace std;
 #include "Image_Class.h"
 
-void addFrame(Image &img, bool fancyFrame, int frameWidth, string frameColor)
+void rotateImage(Image &img, int angle)
 {
-    // Calculate new dimensions for the framed image
-    int newWidth = img.width + 2 * frameWidth;
-    int newHeight = img.height + 2 * frameWidth;
-
-    // Create a new image with increased dimensions for the frame
-    Image framedImage(newWidth, newHeight, img.channels);
-
-    // Fill the border areas of the framed image with the frame color
-    for (int y = 0; y < newHeight; ++y)
+    int newWidth, newHeight;
+    if (angle == 90 || angle == 270)
     {
-        for (int x = 0; x < newWidth; ++x)
-        {
-            if (x < frameWidth || x >= newWidth - frameWidth || y < frameWidth || y >= newHeight - frameWidth)
-            {
-                // Apply frame color to border pixels
-                for (int c = 0; c < img.channels; ++c)
-                {
-                    if (frameColor == "white")
-                    {
-                        framedImage(x, y, c) = 255; // Set pixel value to white
-                    }
-                    else if (frameColor == "black")
-                    {
-                        framedImage(x, y, c) = 0; // Set pixel value to black
-                    }
-                    else
-                    {
-                        // Handle other colors
-                        // Assuming frameColor format is "R G B"
-                        // You may need to parse the color string and set pixel values accordingly
-                        // framedImage(x, y, c) = ???
-                    }
-                }
-            }
-            else
-            {
-                // Copy original image pixels to the center area
-                for (int c = 0; c < img.channels; ++c)
-                {
-                    framedImage(x, y, c) = img(x - frameWidth, y - frameWidth, c);
-                }
-            }
-        }
+        // Swap width and height for 90° or 270° rotation
+        newWidth = img.height;
+        newHeight = img.width;
+    }
+    else
+    {
+        // Keep width and height the same for 180° rotation
+        newWidth = img.width;
+        newHeight = img.height;
     }
 
-    // Replace the original image with the framed image
-    img = framedImage;
-}
+    // Create a new image with the rotated dimensions
+    Image rotatedImage(newWidth, newHeight); // Removed img.channels parameter
 
-// Function to Bluer image.
-void blur(Image &img)
-{
-    Image temp(img);    // Create a temporary copy of the image
-    int kernelSize = 3; // Size of the blurring kernel (3x3)
-
-    // Loop through each pixel in the image
-    for (int y = 1; y < img.height - 1; ++y)
+    // Copy pixels from the original image to the rotated image according to the chosen angle
+    for (int y = 0; y < img.height; ++y)
     {
-        for (int x = 1; x < img.width - 1; ++x)
+        for (int x = 0; x < img.width; ++x)
         {
+            int newX, newY;
+            if (angle == 90)
+            {
+                newX = y;
+                newY = img.width - 1 - x;
+            }
+            else if (angle == 180)
+            {
+                newX = img.width - 1 - x;
+                newY = img.height - 1 - y;
+            }
+            else if (angle == 270)
+            {
+                newX = img.height - 1 - y;
+                newY = x;
+            }
             for (int c = 0; c < img.channels; ++c)
             {
-                int sum = 0;
-
-                // Apply the blur kernel
-                for (int ky = -1; ky <= 1; ++ky)
-                {
-                    for (int kx = -1; kx <= 1; ++kx)
-                    {
-                        sum += temp(x + kx, y + ky, c);
-                    }
-                }
-
-                // Average the sum to get the blurred pixel value
-                img(x, y, c) = sum / (kernelSize * kernelSize);
+                rotatedImage(newX, newY, c) = img(x, y, c);
             }
         }
     }
+
+    // Replace the original image with the rotated image
+    img = rotatedImage;
 }
 
 // Function to flip the image horizontally
@@ -153,9 +122,9 @@ int main()
             cout << "4. Flip Filter." << endl;
             cout << "5. Detect Image Edges." << endl;
             cout << "6. Save the pic with another extension." << endl;
-            cout << "7. Bluer filter." << endl;
-            cout << "8. Resize the image." << endl;
-            cout << "9. Exit the application." << endl;
+            cout << "7. Rotate image" << endl;
+            cout << "8. Exit the application." << endl;
+
             ;
             cout << "Enter your choice (1, 2, 3, 4, 5, 6 or 7): ";
             cin >> choice;
@@ -261,25 +230,15 @@ int main()
 
             else if (choice == 7)
             {
-                // Apply blur filter
-                blur(image);
-                cout << "Blur filter applied." << endl;
-            }
+                // Rotate image int angle;
+                int angle;
+                cout << "Enter the rotation angle (90, 180, or 270): ";
+                cin >> angle;
 
+                rotateImage(image, angle);
+                cout << "Image rotated." << endl;
+            }
             else if (choice == 8)
-            {
-                // Crop image
-                int startX, startY, width, height;
-                cout << "Enter starting point (x, y) for cropping: ";
-                cin >> startX >> startY;
-                cout << "Enter width and height for cropping: ";
-                cin >> width >> height;
-
-                crop(image, startX, startY, width, height);
-                cout << "Image cropped." << endl;
-            }
-
-            else if (choice == 9)
             {
                 // Exit the application
                 cout << "Exiting the application. Goodbye ya user!" << endl;
