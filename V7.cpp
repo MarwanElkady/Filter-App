@@ -126,7 +126,7 @@ int main()
             cout << "8. Exit the application." << endl;
 
             ;
-            cout << "Enter your choice (1, 2, 3, 4, 5, 6 or 7): ";
+            cout << "Enter your choice (1, 2, 3, 4, 5, 6 , 7 or 8): ";
             cin >> choice;
 
             if (choice == 1)
