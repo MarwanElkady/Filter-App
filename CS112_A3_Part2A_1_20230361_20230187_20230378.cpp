@@ -1,16 +1,165 @@
 /*
 File Name:CS112_A3_Part1_S1_20230187_20230361_20230378.cpp
-Marwan IBraheem Isamel - 20230378 - did the menu and the invert image filter and handeled the code writing.
-Seif wael naem : 20230187 - did the flip image filter and grayscaled filter
-mohamed waleed osama : 20230361 - did the black and white and detect image filter
+Marwan IBraheem Isamel - 20230378 - did the menu and the invert image filter and bluer and rotate and merge filter and handeled the code writing.
+Seif wael naem : 20230187 - did the flip image filter and grayscaled filter and crop filter and darken and lighten filter and resizing filter
+mohamed waleed osama : 20230361 - did the black and white and detect image filter and adding the frame filter
+Git-Hub repostry : https://github.com/MarwanElkady/Filter-App
 */
 
 // including the required headers
 #include <iostream>
 #include <string>
 #include <cmath> // Include cmath for mathematical operations
-using namespace std;
 #include "Image_Class.h"
+#include <map>
+#include <array>
+#include <algorithm>
+#include <algorithm> // Include for case-insensitive comparison
+#include <cctype>    // Include for character classification functions
+using namespace std;
+
+// Function to merge two images
+Image mergeImages(const Image &image1, const Image &image2)
+{
+    // Determine minimum dimensions
+    int minWidth = min(image1.width, image2.width);
+    int minHeight = min(image1.height, image2.height);
+
+    // Create a new image for the merged result
+    Image mergedImage(minWidth, minHeight);
+
+    // Merge images by adding pixel values and dividing by 2
+    for (int y = 0; y < minHeight; ++y)
+    {
+        for (int x = 0; x < minWidth; ++x)
+        {
+            for (int c = 0; c < mergedImage.channels; ++c)
+            {
+                int pixelValue1 = image1.imageData[(y * image1.width + x) * image1.channels + c];
+                int pixelValue2 = image2.imageData[(y * image2.width + x) * image2.channels + c];
+                mergedImage.imageData[(y * minWidth + x) * mergedImage.channels + c] = (pixelValue1 + pixelValue2) / 2;
+            }
+        }
+    }
+
+    return mergedImage;
+}
+
+// Function to trim leading and trailing spaces from a string
+std::string trim(const std::string &str)
+{
+    size_t start = str.find_first_not_of(" \t\r\n");
+    size_t end = str.find_last_not_of(" \t\r\n");
+    if (start == std::string::npos || end == std::string::npos)
+        return "";
+    return str.substr(start, end - start + 1);
+}
+
+// Function to apply frame filter to the image
+void applyFrameFilter(Image &img)
+{
+    try
+    {
+        // Get frame width from the user
+        int frameWidth;
+        std::cout << "Enter frame width: ";
+        std::cin >> frameWidth;
+
+        // Define color presets
+        std::map<std::string, std::array<int, 3>> colorPresets = {
+            {"red", {255, 0, 0}},
+            {"green", {0, 255, 0}},
+            {"blue", {0, 0, 255}},
+            {"yellow", {255, 255, 0}},
+            {"white", {255, 255, 255}},
+            {"black", {0, 0, 0}},
+            {"cyan", {0, 255, 255}},
+            {"magenta", {255, 0, 255}},
+            {"orange", {255, 165, 0}},
+            {"purple", {128, 0, 128}},
+            {"pink", {255, 192, 203}},
+            {"brown", {165, 42, 42}}};
+
+        // Get frame color from the user
+        std::string frameColorName;
+        std::cout << "Enter frame color (red, green, blue, yellow, white, black, cyan, magenta, orange, purple, pink, brown): ";
+        std::cin.ignore(); // Ignore newline character from previous input
+        std::getline(std::cin, frameColorName);
+
+        // Trim leading and trailing spaces from the input color name
+        frameColorName = trim(frameColorName);
+
+        // Convert entered color name to lowercase for case-insensitive comparison
+        std::transform(frameColorName.begin(), frameColorName.end(), frameColorName.begin(), ::tolower);
+
+        // Check if the entered color name exists in the presets
+        if (colorPresets.find(frameColorName) == colorPresets.end())
+        {
+            throw std::invalid_argument("Invalid color name. Please enter one of the following: red, green, blue, yellow, white, black, cyan, magenta, orange, purple, pink, brown.");
+        }
+
+        std::array<int, 3> frameColor = colorPresets[frameColorName];
+
+        // Ask user for frame style
+        std::string frameStyle;
+        std::cout << "Enter frame style (solid, checkerboard): ";
+        std::cin >> frameStyle;
+
+        // Create a new image with frame
+        int newWidth = img.width + 2 * frameWidth;
+        int newHeight = img.height + 2 * frameWidth;
+        Image framedImage(newWidth, newHeight);
+
+        // Add frame to the image
+        for (int y = 0; y < newHeight; y++)
+        {
+            for (int x = 0; x < newWidth; x++)
+            {
+                if (x < frameWidth || x >= newWidth - frameWidth || y < frameWidth || y >= newHeight - frameWidth)
+                {
+                    // Frame region
+                    if (frameStyle == "solid")
+                    {
+                        for (int c = 0; c < 3; c++)
+                        {
+                            framedImage.setPixel(x, y, c, frameColor[c]);
+                        }
+                    }
+                    else if (frameStyle == "checkerboard")
+                    {
+                        // Create a checkerboard pattern
+                        bool isCheckerboardSquare = ((x / 30) % 2) == ((y / 30) % 2);
+                        for (int c = 0; c < 3; c++)
+                        {
+                            framedImage.setPixel(x, y, c, isCheckerboardSquare ? frameColor[c] : 255 - frameColor[c]);
+                        }
+                    }
+                    else
+                    {
+                        throw std::invalid_argument("Invalid frame style. Please enter one of the following: solid, checkerboard.");
+                    }
+                }
+                else
+                {
+                    // Image region
+                    for (int c = 0; c < 3; c++)
+                    {
+                        framedImage.setPixel(x, y, c, img.getPixel(x - frameWidth, y - frameWidth, c));
+                    }
+                }
+            }
+        }
+
+        // Replace the original image with the framed image
+        img = framedImage;
+
+        std::cout << "Frame filter applied successfully." << std::endl;
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
 
 // Function to resize the image
 void resizeImage(Image &img)
@@ -252,7 +401,7 @@ int main()
 {
     string filename;
     cout << "***********************************" << endl;
-    cout << "ًWelcome to our baby photoshop app." << endl;
+    cout << "Welcome to our baby photoshop app." << endl;
     cout << "***********************************" << endl;
 
     while (true)
@@ -273,15 +422,17 @@ int main()
             cout << "3. Image Invert." << endl;
             cout << "4. Flip Filter." << endl;
             cout << "5. Detect Image Edges." << endl;
-            cout << "6. Save the pic with another extension." << endl;
+            cout << "6. merge filter." << endl;
             cout << "7. Rotate image" << endl;
             cout << "8. crop image." << endl;
             cout << "9. Darken and lighten image filter." << endl;
             cout << "10. Resize image filter." << endl;
-            cout << "11. Exite the app." << endl;
+            cout << "11. Frame filter." << endl;
+            cout << "12. Save the pic with another extension." << endl;
+            cout << "13. Exit the app." << endl;
 
             ;
-            cout << "Enter your choice (1, 2, 3, 4, 5, 6 , 7 , 8 or 9): ";
+            cout << "Enter your choice (1 => 13): ";
             cin >> choice;
 
             if (choice == 1)
@@ -374,7 +525,7 @@ int main()
                 // Add code to detect edges here
             }
 
-            else if (choice == 6)
+            else if (choice == 12)
             {
                 // Save the image with another extension
                 cout << "Please enter the name for the output image: ";
@@ -410,6 +561,25 @@ int main()
             }
 
             else if (choice == 11)
+            {
+                applyFrameFilter(image);
+            }
+
+            else if (choice == 6)
+            {
+                // Merge images
+                string filename2;
+                cout << "Enter the name of the second image to merge: ";
+                cin >> filename2;
+
+                Image image2(filename2);
+
+                // Merge images
+                Image mergedImage = mergeImages(image, image2);
+                mergedImage.saveImage("merged_image.jpg");
+                cout << "Images merged successfully." << endl;
+            }
+            else if (choice == 13)
             {
                 // Exit the application
                 cout << "Exiting the application. Goodbye ya user!" << endl;

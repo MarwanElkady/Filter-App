@@ -12,6 +12,111 @@ mohamed waleed osama : 20230361 - did the black and white and detect image filte
 using namespace std;
 #include "Image_Class.h"
 
+// Function to lighten of darken the image
+void adjustBrightness(Image &img)
+{
+    try
+    {
+        // Prompt the user to choose to darken or lighten the image
+        char choice;
+        cout << "Do you want to darken (D) or lighten (L) the image? ";
+        cin >> choice;
+
+        // Create a new image for the filtered result
+        Image filteredImage(img.width, img.height);
+
+        // Apply the filter by adjusting each pixel's RGB values
+        for (int y = 0; y < img.height; ++y)
+        {
+            for (int x = 0; x < img.width; ++x)
+            {
+                for (int c = 0; c < img.channels; ++c)
+                {
+                    // Get the original pixel value
+                    unsigned char pixelValue = img.getPixel(x, y, c);
+
+                    // Adjust the pixel value based on user choice
+                    if (choice == 'D' || choice == 'd')
+                    {
+                        // Darken the pixel value by 50%
+                        int adjustedValue = pixelValue / 1.5;
+                        filteredImage.setPixel(x, y, c, adjustedValue);
+                    }
+                    else if (choice == 'L' || choice == 'l')
+                    {
+                        // Lighten the pixel value by 50%
+                        int adjustedValue = pixelValue * 1.5;
+                        if (adjustedValue > 255)
+                            adjustedValue = 255; // Ensure the value doesn't exceed 255
+                        filteredImage.setPixel(x, y, c, adjustedValue);
+                    }
+                    else
+                    {
+                        throw invalid_argument("Invalid choice. Please enter 'D' or 'L'.");
+                    }
+                }
+            }
+        }
+
+        // Replace the original image with the filtered image
+        img = filteredImage;
+
+        cout << "Brightness adjusted successfully." << endl;
+    }
+    catch (const exception &e)
+    {
+        cerr << "Error: " << e.what() << endl;
+    }
+}
+
+// Function to crop the image
+void cropImage(Image &img)
+{
+    try
+    {
+        // Get cropping dimensions from the user
+        int x, y, width, height;
+        cout << "Enter x-coordinate of the starting point (top-left corner): ";
+        cin >> x;
+        cout << "Enter y-coordinate of the starting point (top-left corner): ";
+        cin >> y;
+        cout << "Enter width of the area to crop: ";
+        cin >> width;
+        cout << "Enter height of the area to crop: ";
+        cin >> height;
+
+        // Verify dimensions are within bounds
+        if (x < 0 || y < 0 || width <= 0 || height <= 0 || x + width > img.width || y + height > img.height)
+        {
+            throw invalid_argument("Invalid cropping dimensions or starting point.");
+        }
+
+        // Create a new image for the cropped area
+        Image croppedImage(width, height);
+
+        // Copy pixels from the original image to the cropped image
+        for (int j = 0; j < height; j++)
+        {
+            for (int i = 0; i < width; i++)
+            {
+                for (int c = 0; c < img.channels; c++)
+                {
+                    croppedImage.setPixel(i, j, c, img.getPixel(x + i, y + j, c));
+                }
+            }
+        }
+
+        // Replace the original image with the cropped image
+        img = croppedImage;
+
+        cout << "Image cropped successfully." << endl;
+    }
+    catch (const exception &e)
+    {
+        cerr << "Error: " << e.what() << endl;
+    }
+}
+
 void rotateImage(Image &img, int angle)
 {
     int newWidth, newHeight;
@@ -123,10 +228,12 @@ int main()
             cout << "5. Detect Image Edges." << endl;
             cout << "6. Save the pic with another extension." << endl;
             cout << "7. Rotate image" << endl;
-            cout << "8. Exit the application." << endl;
+            cout << "8. crop image." << endl;
+            cout << "9. Darken and lighten image filter." << endl;
+            cout << "10. Exite the app." << endl;
 
             ;
-            cout << "Enter your choice (1, 2, 3, 4, 5, 6 , 7 or 8): ";
+            cout << "Enter your choice (1, 2, 3, 4, 5, 6 , 7 , 8 or 9): ";
             cin >> choice;
 
             if (choice == 1)
@@ -240,6 +347,16 @@ int main()
             }
 
             else if (choice == 8)
+            {
+                cropImage(image);
+            }
+
+            else if (choice == 9)
+            {
+                adjustBrightness(image);
+            }
+
+            else if (choice == 10)
             {
                 // Exit the application
                 cout << "Exiting the application. Goodbye ya user!" << endl;
